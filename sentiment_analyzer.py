@@ -8,7 +8,7 @@ import pickle
 
 with open('reviews_train.csv') as review_file:
     reader = csv.reader(review_file, delimiter=',')
-    documents = [row[0] for row in reader]
+    documents = [[row[0], row[1]] for row in reader]
 
 result = []
 spell = SymSpell(max_dictionary_edit_distance=2,prefix_length=7)
@@ -17,13 +17,14 @@ dictionary_path = pkg_resources.resource_filename(
 spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
 for review in documents:
-    for word in review.split(' '):
+    for word in review[1].split(' '):
         if(len(word) > 0):
-            word = word.translate(str.maketrans('', '', string.punctuation))
-            try:
-                result.append(str(spell.lookup(word,Verbosity.CLOSEST, max_edit_distance=2)[0]).split(',')[0])
-            except IndexError:
-                result.append(word)
+            if(word.lower() != review[0].lower()):
+                word = word.translate(str.maketrans('', '', string.punctuation))
+                try:
+                    result.append(str(spell.lookup(word,Verbosity.CLOSEST, max_edit_distance=2)[0]).split(',')[0])
+                except IndexError:
+                    result.append(word)
 
 all_words = nltk.FreqDist(word.lower() for word in result)
 word_features = list(all_words)[:2000]

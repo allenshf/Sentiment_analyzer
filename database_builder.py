@@ -22,10 +22,17 @@ with open('reviews.csv', mode='w', newline='') as review_file:
 		time.sleep(0.2)
 		soup = BeautifulSoup(page.content, 'html.parser')
 		results = soup.find('div',{'class':'artist-reviews'})
-		reviews = [review.find('p').text for review in results.find_all(class_='review-content')]
+		reviews = []
+		index = 0
+		for review in results.find_all(class_='review-content'):
+			temp = review.find_all('p')
+			reviews.append('')
+			for line in temp[:-2]:
+				reviews[index] += line.text + ' '
+			index += 1
 		for review in reviews:
 			try:
 				if(len(review) > 0):
-					review_writer.writerow([review])
+					review_writer.writerow([artist[0], review])
 			except UnicodeEncodeError:
 				print('Invalid character detected')
