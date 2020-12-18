@@ -17,7 +17,7 @@ artists = [[artist.find('a').text, artist.find('a')['href']] for artist in artis
 
 with open('reviews.csv', mode='w', newline='') as review_file:
 	review_writer = csv.writer(review_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	for artist in artists[:10]:
+	for artist in artists[:50]:
 		page = requests.get('https://www.songkick.com/' + artist[1])
 		time.sleep(0.2)
 		soup = BeautifulSoup(page.content, 'html.parser')

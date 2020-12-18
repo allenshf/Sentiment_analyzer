@@ -8,7 +8,7 @@ import pickle
 
 with open('reviews_train.csv') as review_file:
     reader = csv.reader(review_file, delimiter=',')
-    documents = [[row[0], row[1]] for row in reader]
+    documents = [[row[0], row[1], row[2]] for row in reader[:195]]
 
 result = []
 spell = SymSpell(max_dictionary_edit_distance=2,prefix_length=7)
@@ -19,7 +19,7 @@ spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 for review in documents:
     for word in review[1].split(' '):
         if(len(word) > 0):
-            if(word.lower() != review[0].lower()):
+            if review[0].lower() not in word.lower():
                 word = word.translate(str.maketrans('', '', string.punctuation))
                 try:
                     result.append(str(spell.lookup(word,Verbosity.CLOSEST, max_edit_distance=2)[0]).split(',')[0])
@@ -27,7 +27,10 @@ for review in documents:
                     result.append(word)
 
 all_words = nltk.FreqDist(word.lower() for word in result)
-word_features = list(all_words)[:2000]
+word_features = []
+for word in list(all_words)[:200]:
+    if all_words[word] > 25:
+        word_features.append(word)
 
 def document_features(document):
     document_words = set(document)
@@ -43,4 +46,12 @@ def document_features(document):
     return features
 
 #TODO: Add sentiment column for training data
-featuresets = [(document_features(d), c) for (d,c) in documents]
+featuresets = []
+for review in documents:
+    featuresets.append((document_features(review[1]),review[2]))
+
+classifier = nltk.NaiveBayesClassifier.train(featuresets)
+classifier.show_most_informative_features(5)
+f = open('sentiment_analyzer.pickle', 'wb')
+pickle.dump(classifier,f)
+f.close()
