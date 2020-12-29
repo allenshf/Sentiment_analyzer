@@ -3,12 +3,11 @@ import csv
 import string
 from symspellpy import SymSpell, Verbosity
 import pkg_resources
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import pickle
 
 with open('reviews_train.csv') as review_file:
-    reader = csv.reader(review_file, delimiter=',')
-    documents = [[row[0], row[1], row[2]] for row in reader[:195]]
+    reader = list(csv.reader(review_file, delimiter=','))
+    documents = [[row[0], row[1], row[2]] for row in reader]
 
 result = []
 spell = SymSpell(max_dictionary_edit_distance=2,prefix_length=7)
@@ -51,7 +50,9 @@ for review in documents:
     featuresets.append((document_features(review[1]),review[2]))
 
 classifier = nltk.NaiveBayesClassifier.train(featuresets)
-classifier.show_most_informative_features(5)
 f = open('sentiment_analyzer.pickle', 'wb')
 pickle.dump(classifier,f)
+f.close()
+f = open('word_features.pickle', 'wb')
+pickle.dump(word_features,f)
 f.close()
