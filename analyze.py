@@ -41,26 +41,48 @@ dictionary_path = pkg_resources.resource_filename(
     "symspellpy", "frequency_dictionary_en_82_765.txt")
 spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 def document_features(document):
-    document_words = set(document)
+    document_words = document.split(' ')
+    feature_words = []
     features = {}
+    last_not = False
     for word in document_words:
         word = word.translate(str.maketrans('', '', string.punctuation))
         try:
             word = str(spell.lookup(word,Verbosity.CLOSEST, max_edit_distance=2)[0]).split(',')[0]
+            if word.lower() == 'not':
+                last_not = True
+                continue
+            if last_not:
+                word = 'not ' + word
+                last_not = False
         except IndexError:
-            word = word
+            pass
+        finally:
+            feature_words.append(word)
     for word in word_features:
-        features['contains({})'.format(word)] = (word in document_words)
+        features['contains({})'.format(word)] = (word in feature_words)
     return features
 f.close()
 
 f = open('sentiment_analyzer.pickle', 'rb')
 classifier = pickle.load(f)
 sid = SentimentIntensityAnalyzer()
+naive_bayes_result = {'neg':0, 'neu':0, 'pos':0}
+sid_result = {'neg':0, 'neu':0, 'pos':0}
 for review in reviews:
-	print(classifier.classify(document_features(review)))
-	print(sid.polarity_scores(review))
+	naive_bayes_result[classifier.classify(document_features(review))] += 1 
+	result = sid.polarity_scores(review)
+	max = 'neg'
+	max_val = result['neg']
+	if(result['neu'] > max_val):
+		max = 'neu'
+		max_val = result['neu']
+	if(result['pos'] > max_val):
+		max = 'pos'
+	sid_result[max] += 1
 
+print(naive_bayes_result)
+print(sid_result)
 f.close()
 
 
