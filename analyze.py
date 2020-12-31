@@ -68,21 +68,21 @@ f = open('sentiment_analyzer.pickle', 'rb')
 classifier = pickle.load(f)
 sid = SentimentIntensityAnalyzer()
 naive_bayes_result = {'neg':0, 'neu':0, 'pos':0}
-sid_result = {'neg':0, 'neu':0, 'pos':0}
+sid_result = {'neg':0, 'pos':0}
 for review in reviews:
 	naive_bayes_result[classifier.classify(document_features(review))] += 1 
 	result = sid.polarity_scores(review)
-	max = 'neg'
-	max_val = result['neg']
-	if(result['neu'] > max_val):
-		max = 'neu'
-		max_val = result['neu']
-	if(result['pos'] > max_val):
-		max = 'pos'
-	sid_result[max] += 1
+	if(result['pos'] > result['neg']):
+		sid_result['pos'] += 1
+	else:
+		sid_result['neg'] += 1
 
 print(naive_bayes_result)
 print(sid_result)
+score = (2.5*naive_bayes_result['neu'] + 5*naive_bayes_result['pos'])/len(reviews)
+percent = round(naive_bayes_result['pos'] / (naive_bayes_result['pos']+naive_bayes_result['neg']) * 100,2)
+print('Score: ' + str(score) + '/5.0\n' + str(percent) + '% Approval Rating')
+
 f.close()
 
 
