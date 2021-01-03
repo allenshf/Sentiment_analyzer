@@ -44,17 +44,34 @@ def document_features(document):
     document_words = document.split(' ')
     feature_words = []
     features = {}
-    last_not = False
+    negs = ['not', 'no', 'didnt', 'never']
+    last_neg = False
+    neg_index = 0
     for word in document_words:
         word = word.translate(str.maketrans('', '', string.punctuation))
         try:
             word = str(spell.lookup(word,Verbosity.CLOSEST, max_edit_distance=2)[0]).split(',')[0]
-            if word.lower() == 'not':
-                last_not = True
+            if word.lower() in negs:
+                last_neg = True
+                if word.lower() == 'not':
+                    neg_index = 0
+                elif word.lower() == 'no':
+                    neg_index = 1
+                elif word.lower() == 'didnt':
+                    neg_index = 2
+                elif word.lower() == 'never':
+                    neg_index = 3
                 continue
-            if last_not:
-                word = 'not ' + word
-                last_not = False
+            if last_neg:
+                if neg_index == 0:
+                    word = 'not ' + word
+                if neg_index == 1:
+                    word = 'no ' + word
+                if neg_index == 2:
+                    word = 'didnt ' + word
+                if neg_index == 3:
+                    word = 'never ' + word
+                last_neg = False   
         except IndexError:
             pass
         finally:
